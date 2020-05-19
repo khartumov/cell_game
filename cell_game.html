@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cell game</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+        <template v-if="!isGameMode">
+          <h1>Сгенерируйте сетку</h1>
+          <p>Введите число квадратов по ширине и высoте (желательно не больше 15 для удобства)</p>
+          <div>
+            Ширина<br>
+            <input class="input" type="text" v-model.number="horizontal">
+          </div>
+          <div>
+            Высота<br>
+            <input class="input" type="text" v-model.number="vertical">
+          </div>
+          <button class="btn" @click="starGame">Начать</button>
+        </template>
+        <template v-else>
+            <div class="game_field">
+              <div
+                v-for="( row, index ) in gameField"
+                class="row"
+              >
+                <div
+                  v-for="( cell, idx ) in row"
+                  :class="[{ 'opened' : cell.isOpened }, 'cell']"
+                  :id="`${index}:${idx}`"
+                  @click="createCross(cell)"
+                >
+                </div>
+              </div>
+            </div>
+
+            <div class="ui">
+              <button class="btn" @click="resetGame">Сбросить</button>
+              <button class="btn" @click="goToMain">Сгенерить новую сетку</button>
+            </div>
+
+            <span>Количество ходов: {{ counter }}</span>
+        </template>
+      </div>
+  </div>
+
+  <script>
+    const app = new Vue({
+      el: '#app',
+      data: {
+        horizontal: null,
+        vertical: null,
+        gameField: [],
+        isGameMode: false,
+        counter: 0,
+      },
+
+      methods : {
+        starGame() {
+          if ( !this.horizontal || !this.vertical ) {
+            alert("Введите ширину и высоту сетки");
+
+            return;
+          }
+
+          if ( typeof this.horizontal !== 'number' || typeof this.vertical !== 'number' ) {
+            alert("Введите числа");
+
+            return;
+          }
+
+          this.generateField();
+
+          this.isGameMode = true;
+        },
+
+        generateField() {
+          for (let i = 0; i < this.vertical; i++) {
+            const row = [];
+
+            for (let k = 0; k < this.horizontal; k++) {
+              row.push({
+                id: `${i}:${k}`,
+                isOpened: false,
+              });
+            }
+
+            this.gameField.push(row);
+          }
+        },
+
+        createCross(target) {
+          const row  = +target.id.split(':')[0];
+          const cell = +target.id.split(':')[1];
+
+          // center
+          this.gameField[row][cell].isOpened = !this.gameField[row][cell].isOpened;
+
+          // top
+          if (this.gameField[row - 1]) {
+            this.gameField[row - 1][cell].isOpened = !this.gameField[row - 1][cell].isOpened;
+          }
+
+          // bottom
+          if (this.gameField[row + 1]) {
+            this.gameField[row + 1][cell].isOpened = !this.gameField[row + 1][cell].isOpened;
+          }
+
+          // left
+          if (this.gameField[row][cell-1]) {
+            this.gameField[row][cell-1].isOpened = !this.gameField[row][cell-1].isOpened;
+          }
+
+          // right
+          if (this.gameField[row][cell+1]) {
+           this.gameField[row][cell+1].isOpened = !this.gameField[row][cell+1].isOpened;
+          }
+
+          const mergedArray = [].concat(...this.gameField);
+          const isWin       = mergedArray.every(({isOpened}) => isOpened === true)
+
+          if (isWin) {
+            setTimeout(function(){
+              alert("Вы выиграли");
+            });
+          }
+
+          this.counter++;
+        },
+
+        resetGame() {
+          this.gameField = [];
+          this.generateField();
+
+          this.counter = 0;
+        },
+
+        goToMain() {
+          this.horizontal = null;
+          this.vertical   = null;
+          this.gameField  = [];
+          this.isGameMode = false;
+          this.counter    = 0;
+        }
+      },
+    });
+
+  </script>
+
+  <style>
+    body {
+      font-family: 'Verdana';
+
+    }
+
+    * {
+      outline: none;
+    }
+
+    .input {
+      padding: 5px;
+      border: 1px solid #444;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      width: 100px;
+    }
+
+    .btn {
+      border: none;
+      background: crimson;
+      color: #fff;
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .game_field {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .row {
+      display: flex;
+      width: 100%;
+    }
+
+    .cell {
+      height: 60px;
+      width: 60px;
+      background: #444;
+      margin: 5px;
+      outline: 1px solid #444;
+    }
+
+    .opened {
+      background: #fff;
+    }
+  </style>
+
+</body>
+</html>
